@@ -1,18 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useTasks } from '../hooks/useTasks'
 import { useAuth } from '../hooks/useAuth'
-import { Spinner } from '../components/ui/Spinner'
+import { useNavigate } from 'react-router-dom'
+import { DashboardSkeleton } from '../components/ui/PageSkeleton'
 import { Badge } from '../components/ui/Badge'
 import { Link } from 'react-router-dom'
-import { ListTodo, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
+import { ListTodo, CheckCircle2, Clock, AlertTriangle, LogOut, User } from 'lucide-react'
 import { formatDate, isOverdue } from '../lib/utils'
 import { STATUS_LABELS } from '../lib/constants'
-import type { TaskStatus } from '../types'
 
 export function DashboardPage() {
-  const { profile } = useAuth()
+  const { profile, signOut } = useAuth()
   const { tasks, loading } = useTasks()
+  const navigate = useNavigate()
   const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, overdue: 0 })
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   useEffect(() => {
     if (!tasks.length) return
@@ -22,17 +33,41 @@ export function DashboardPage() {
     setStats({ total: tasks.length, completed, inProgress, overdue })
   }, [tasks])
 
-  if (loading) return <Spinner className="mt-20" />
+  if (loading) return <DashboardSkeleton />
 
   const recentTasks = tasks.slice(0, 5)
-  const statusOrder: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done']
-  const kanbanCounts = statusOrder.map((s) => ({ status: s, count: tasks.filter((t) => t.status === s).length }))
 
   return (
     <div className="space-y-4 lg:space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white lg:text-2xl">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 lg:text-base">Welcome back, {profile?.name}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white lg:text-2xl">Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 lg:text-base">Welcome back, {profile?.name}</p>
+        </div>
+        <div className="relative lg:hidden" ref={menuRef}>
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full ring-2 ring-primary/20" />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-medium text-white ring-2 ring-primary/20">
+                {profile?.name?.charAt(0) || 'U'}
+              </div>
+            )}
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <button onClick={() => { setMenuOpen(false); navigate('/profile') }}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">
+                <User className="h-4 w-4" /> Profile
+              </button>
+              <hr className="my-1 border-gray-200 dark:border-gray-700" />
+              <button onClick={() => { setMenuOpen(false); signOut() }}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                <LogOut className="h-4 w-4" /> Sign Out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {[
@@ -50,14 +85,6 @@ export function DashboardPage() {
               <div className={`rounded-lg p-2 lg:p-3 ${bg}`}><Icon className={`h-5 w-5 lg:h-6 lg:w-6 ${color}`} /></div>
             </div>
           </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        {kanbanCounts.map(({ status, count }) => (
-          <Link key={status} to="/board" className="rounded-xl border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-            <p className="text-xs text-gray-500 dark:text-gray-400 lg:text-sm">{STATUS_LABELS[status]}</p>
-            <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white lg:text-2xl">{count}</p>
-          </Link>
         ))}
       </div>
       <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">

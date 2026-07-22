@@ -4,6 +4,7 @@ export interface User {
   name: string | null
   avatar_url: string | null
   role: 'user' | 'admin'
+  onboarded: boolean
   created_at: string
 }
 

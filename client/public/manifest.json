@@ -1,0 +1,25 @@
+{
+  "name": "UCS Task Manager",
+  "short_name": "UCS Tasks",
+  "description": "Task management for UCS team",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0EA5E9",
+  "scope": "/",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -15,7 +15,10 @@ import { supabaseAdmin } from './config/supabase'
 
 const app = express()
 
-app.use(cors({ origin: env.clientUrl, credentials: true }))
+app.use(cors({
+  origin: env.clientUrl === '*' ? true : env.clientUrl,
+  credentials: true,
+}))
 app.use(express.json())
 
 const limiter = rateLimit({
@@ -25,6 +28,21 @@ const limiter = rateLimit({
   legacyHeaders: false,
 })
 app.use('/api', limiter)
+
+app.post('/api/users/set-password', async (req, res) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'No token' })
+  const { password } = req.body
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
+  try {
+    const { sub } = await verifyToken(authHeader.replace('Bearer ', ''), { secretKey: env.clerkSecretKey })
+    await clerkClient.users.updateUser(sub, { password })
+    res.json({ success: true })
+  } catch (err: any) {
+    console.error('Set password error:', err?.message || err)
+    res.status(500).json({ error: err?.message || 'Failed to set password' })
+  }
+})
 
 app.post('/api/users/sync', async (req, res) => {
   const authHeader = req.headers.authorization
@@ -39,11 +57,13 @@ app.post('/api/users/sync', async (req, res) => {
       email: clerkUser.emailAddresses[0]?.emailAddress || '',
       name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() : clerkUser.username || null,
       avatar_url: clerkUser.imageUrl || null,
+      onboarded: false,
     }).select().single()
     if (error) return res.status(500).json({ error: error.message })
     res.status(201).json({ user: newUser })
-  } catch {
-    res.status(401).json({ error: 'Invalid token' })
+  } catch (err: any) {
+    console.error('Sync error:', err?.message || err)
+    res.status(500).json({ error: err?.message || 'Sync failed' })
   }
 })
 

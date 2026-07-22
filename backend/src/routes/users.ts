@@ -15,4 +15,16 @@ router.get('/me', async (req: Request, res: Response) => {
   res.json({ user: data })
 })
 
+router.put('/me', async (req: Request, res: Response) => {
+  const { name, onboarded } = req.body
+  const updates: Record<string, unknown> = {}
+  if (name !== undefined) updates.name = name.trim()
+  if (onboarded !== undefined) updates.onboarded = onboarded
+  if (!Object.keys(updates).length) return res.status(400).json({ error: 'No fields to update' })
+
+  const { data, error } = await supabaseAdmin.from('users').update(updates).eq('id', req.userId).select().single()
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ user: data })
+})
+
 export default router

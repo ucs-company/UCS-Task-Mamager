@@ -7,7 +7,7 @@ const router = Router()
 router.get('/pdf', async (_req: Request, res: Response) => {
   const { data: tasks } = await supabaseAdmin
     .from('tasks')
-    .select('*, created_by_user:users!tasks_created_by_fkey(*)')
+    .select('*, created_by_user:users(*)')
     .order('created_at', { ascending: false })
 
   const doc = new jsPDF({ orientation: 'landscape' })
@@ -47,7 +47,7 @@ router.get('/pdf', async (_req: Request, res: Response) => {
 router.get('/csv', async (_req: Request, res: Response) => {
   const { data: tasks } = await supabaseAdmin
     .from('tasks')
-    .select('*, created_by_user:users!tasks_created_by_fkey(*)')
+    .select('*, created_by_user:users(*)')
     .order('created_at', { ascending: false })
 
   const csv = [

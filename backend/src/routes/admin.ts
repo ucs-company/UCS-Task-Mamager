@@ -6,7 +6,7 @@ const router = Router()
 router.get('/tasks', async (_req: Request, res: Response) => {
   const { data, error } = await supabaseAdmin
     .from('tasks')
-    .select('*, created_by_user:users!tasks_created_by_fkey(*)')
+    .select('*, created_by_user:users(*)')
     .order('created_at', { ascending: false })
 
   if (error) return res.status(500).json({ error: error.message })

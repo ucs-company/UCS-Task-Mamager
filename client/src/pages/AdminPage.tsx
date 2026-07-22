@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
-import { Spinner } from '../components/ui/Spinner'
+import { Skeleton } from '../components/ui/Skeleton'
 import { Modal } from '../components/ui/Modal'
 import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
@@ -125,7 +125,7 @@ export function AdminPage() {
     )
   }
 
-  if (loading) return <Spinner className="mt-20" />
+  if (loading) return <div className="mt-20 space-y-4"><Skeleton className="h-8 w-24 mx-auto" /><Skeleton className="h-10 w-48 mx-auto" /></div>
 
   return (
     <div ref={printRef} className="space-y-4 lg:space-y-6">

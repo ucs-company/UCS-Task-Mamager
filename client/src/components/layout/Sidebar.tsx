@@ -1,16 +1,10 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../hooks/useAuth'
-import { LayoutDashboard, Columns3, ListTodo, Users, LogOut, ClipboardList } from 'lucide-react'
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/board', icon: Columns3, label: 'Board' },
-  { to: '/tasks', icon: ListTodo, label: 'Tasks' },
-  { to: '/team', icon: Users, label: 'Team' },
-]
+import { LayoutDashboard, Columns3, ListTodo, Users, ClipboardList } from 'lucide-react'
 
 export function Sidebar() {
-  const { signOut } = useAuth()
+  const { isAdmin } = useAuth()
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
@@ -25,36 +19,52 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => (
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            cn('flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              isActive ? 'bg-primary-light text-primary dark:bg-primary/20 dark:text-primary-light'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800')
+          }
+        >
+          <LayoutDashboard className="h-5 w-5" /> Dashboard
+        </NavLink>
+
+        {!isAdmin && (
           <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/dashboard'}
+            to="/board"
             className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary-light text-primary dark:bg-primary/20 dark:text-primary-light'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
-              )
+              cn('flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                isActive ? 'bg-primary-light text-primary dark:bg-primary/20 dark:text-primary-light'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800')
             }
           >
-            <item.icon className="h-5 w-5" />
-            {item.label}
+            <Columns3 className="h-5 w-5" /> Board
           </NavLink>
-        ))}
+        )}
 
-      </nav>
-
-      <div className="border-t border-gray-200 p-3 dark:border-gray-700">
-        <button
-          onClick={() => signOut()}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+        <NavLink
+          to="/tasks"
+          className={({ isActive }) =>
+            cn('flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              isActive ? 'bg-primary-light text-primary dark:bg-primary/20 dark:text-primary-light'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800')
+          }
         >
-          <LogOut className="h-5 w-5" />
-          Sign Out
-        </button>
-      </div>
+          <ListTodo className="h-5 w-5" /> Tasks
+        </NavLink>
+
+        <NavLink
+          to="/team"
+          className={({ isActive }) =>
+            cn('flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              isActive ? 'bg-primary-light text-primary dark:bg-primary/20 dark:text-primary-light'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800')
+          }
+        >
+          <Users className="h-5 w-5" /> Team
+        </NavLink>
+      </nav>
     </aside>
   )
 }

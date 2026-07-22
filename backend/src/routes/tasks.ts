@@ -5,24 +5,28 @@ const router = Router()
 
 router.get('/', async (req: Request, res: Response) => {
   const isAdmin = req.userRole === 'admin'
-  let query = supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('tasks')
-    .select('*, task_assignees(*, users(*)), created_by_user:users!tasks_created_by_fkey(*)')
+    .select('*, task_assignees(*, users!task_assignees_user_id_fkey(*)), created_by_user:users!tasks_created_by_fkey(*)')
     .order('created_at', { ascending: false })
 
+  if (error) return res.status(500).json({ error: error.message })
+
   if (!isAdmin) {
-    query = query.or(`created_by.eq.${req.userId},and(task_assignees.user_id.eq.${req.userId})`)
+    const filtered = data.filter((t) =>
+      t.created_by === req.userId ||
+      t.task_assignees?.some((a: any) => a.user_id === req.userId)
+    )
+    return res.json({ tasks: filtered })
   }
 
-  const { data, error } = await query
-  if (error) return res.status(500).json({ error: error.message })
   res.json({ tasks: data })
 })
 
 router.get('/:id', async (req: Request, res: Response) => {
   const { data, error } = await supabaseAdmin
     .from('tasks')
-    .select('*, task_assignees(*, users(*)), created_by_user:users!tasks_created_by_fkey(*)')
+    .select('*, task_assignees(*, users!task_assignees_user_id_fkey(*)), created_by_user:users!tasks_created_by_fkey(*)')
     .eq('id', req.params.id)
     .single()
   if (error) return res.status(500).json({ error: error.message })

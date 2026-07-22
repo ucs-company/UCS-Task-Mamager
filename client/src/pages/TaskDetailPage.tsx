@@ -1,9 +1,8 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTask } from '../hooks/useTasks'
 import { useComments } from '../hooks/useComments'
-import { useAuth } from '../hooks/useAuth'
 import { api } from '../lib/api'
-import { Spinner } from '../components/ui/Spinner'
+import { TaskDetailSkeleton } from '../components/ui/PageSkeleton'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { useState, useEffect } from 'react'
@@ -17,36 +16,21 @@ export function TaskDetailPage() {
   const navigate = useNavigate()
   const { task, loading } = useTask(id)
   const { comments, addComment } = useComments(id)
-  const { userId } = useAuth()
   const [commentText, setCommentText] = useState('')
   const [activity, setActivity] = useState<ActivityLog[]>([])
 
-  useEffect(() => {
-    if (!id) return
-    api.getActivity(id).then(({ activity: data }) => setActivity(data as ActivityLog[])).catch(() => {})
-  }, [id])
+  useEffect(() => { if (!id) return; api.getActivity(id).then(({ activity: data }) => setActivity(data as ActivityLog[])).catch(() => {}) }, [id])
 
-  const handleDelete = async () => {
-    if (!confirm('Delete this task?')) return
-    await api.deleteTask(id!)
-    navigate('/tasks')
-  }
+  const handleDelete = async () => { if (!confirm('Delete this task?')) return; await api.deleteTask(id!); navigate('/tasks') }
+  const handleAddComment = async () => { if (!commentText.trim()) return; await addComment(commentText.trim()); setCommentText('') }
 
-  const handleAddComment = async () => {
-    if (!commentText.trim()) return
-    await addComment(commentText.trim())
-    setCommentText('')
-  }
-
-  if (loading) return <Spinner className="mt-20" />
+  if (loading) return <TaskDetailSkeleton />
   if (!task) return <p className="mt-20 text-center text-gray-500">Task not found</p>
 
   return (
     <div className="mx-auto max-w-4xl space-y-4 lg:space-y-6">
       <div className="flex items-center justify-between">
-        <Link to="/board" className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary">
-          <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Back</span>
-        </Link>
+        <Link to="/tasks" className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary"><ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Back</span></Link>
         <div className="flex items-center gap-2">
           <Link to={`/tasks/${id}/edit`}><Button variant="secondary" size="sm"><Edit2 className="h-4 w-4" /> <span className="hidden sm:inline">Edit</span></Button></Link>
           <Button variant="danger" size="sm" onClick={handleDelete}><Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Delete</span></Button>
@@ -82,7 +66,7 @@ export function TaskDetailPage() {
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3 dark:border-gray-700 lg:px-6 lg:py-4">
+        <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3 lg:px-6 lg:py-4">
           <MessageSquare className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white lg:text-base">Comments</h2>
         </div>
@@ -103,7 +87,7 @@ export function TaskDetailPage() {
             </div>
           ))}
         </div>
-        <div className="flex items-center gap-3 border-t border-gray-200 px-4 py-3 dark:border-gray-700 lg:px-6 lg:py-4">
+        <div className="flex items-center gap-3 border-t border-gray-200 px-4 py-3 lg:px-6 lg:py-4">
           <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write a comment..."
             className="flex-1 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             onKeyDown={(e) => e.key === 'Enter' && handleAddComment()} />
@@ -112,7 +96,7 @@ export function TaskDetailPage() {
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3 dark:border-gray-700 lg:px-6 lg:py-4">
+        <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3 lg:px-6 lg:py-4">
           <History className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white lg:text-base">Activity</h2>
         </div>
