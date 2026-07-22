@@ -29,6 +29,7 @@ export function LoginPage() {
     setError('')
     setSuccess('')
     setLoading(true)
+    if (!signIn) { setLoading(false); return }
     try {
       if (mode === 'signin') {
         const result = await signIn.create({ identifier: email, password })
@@ -136,7 +137,7 @@ export function LoginPage() {
             {success && <p className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">{success}</p>}
 
             <Button type="submit" className="w-full" loading={loading}>
-              {mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Email'}
+              {mode === 'signin' ? 'Sign In' : 'Send Reset Email'}
             </Button>
 
             <p className="text-center text-xs text-gray-500">

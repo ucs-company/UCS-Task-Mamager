@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isNewUser = profile?.onboarded === false
 
   return (
-    <AuthContext.Provider value={{ userId: clerkUserId, profile, loading, isAdmin, isNewUser, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ userId: clerkUserId ?? null, profile, loading, isAdmin, isNewUser, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )

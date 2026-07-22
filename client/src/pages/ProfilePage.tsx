@@ -7,7 +7,7 @@ import { api } from '../lib/api'
 import { ProfileSkeleton } from '../components/ui/PageSkeleton'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { Mail, ClipboardList, CheckCircle2, User, Lock, Eye, EyeOff, LogOut } from 'lucide-react'
+import { Mail, ClipboardList, CheckCircle2, Lock, Eye, EyeOff, LogOut } from 'lucide-react'
 
 export function ProfilePage() {
   const { profile, signOut, refreshProfile } = useAuth()
@@ -21,7 +21,7 @@ export function ProfilePage() {
   const [pwOpen, setPwOpen] = useState(false)
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
-  const [showCur, setShowCur] = useState(false)
+  const [showCur, _setShowCur] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -51,7 +51,7 @@ export function ProfilePage() {
     setError('')
     setSuccess('')
     try {
-      await user?.update({ password: newPw })
+      await (user as any)?.update({ password: newPw })
       setSuccess('Password updated!')
       setCurrentPw('')
       setNewPw('')

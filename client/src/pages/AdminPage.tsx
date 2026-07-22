@@ -27,7 +27,7 @@ const priorityOptions = [
 ]
 
 export function AdminPage() {
-  const { supabaseUser } = useAuth()
+  const { userId: supabaseUser } = useAuth()
   const [tasks, setTasks] = useState<Task[]>([])
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -106,12 +106,12 @@ export function AdminPage() {
       description: description.trim(),
       status, priority,
       due_date: dueDate || null,
-      created_by: supabaseUser.id,
+      created_by: supabaseUser,
     }).select().single()
 
     if (data && selectedAssignees.length) {
       await supabase.from('task_assignees').insert(
-        selectedAssignees.map((userId) => ({ task_id: data.id, user_id: userId, assigned_by: supabaseUser.id }))
+        selectedAssignees.map((userId) => ({ task_id: data.id, user_id: userId, assigned_by: supabaseUser }))
       )
     }
 

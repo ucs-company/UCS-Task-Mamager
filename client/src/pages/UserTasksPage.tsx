@@ -7,7 +7,7 @@ import { Badge } from '../components/ui/Badge'
 import { ArrowLeft, ListTodo, Clock, CheckCircle2, Eye, Calendar, Mail } from 'lucide-react'
 import { formatDate, isOverdue } from '../lib/utils'
 import { STATUS_LABELS, PRIORITY_LABELS } from '../lib/constants'
-import type { User, Task, TaskStatus } from '../types'
+import type { User, TaskStatus } from '../types'
 
 const statusIcons: Record<TaskStatus, typeof ListTodo> = {
   todo: ListTodo, in_progress: Clock, in_review: Eye, done: CheckCircle2,
