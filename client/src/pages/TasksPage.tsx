@@ -55,7 +55,7 @@ function DroppableColumn({ status, children, count, adding, desc, onDescChange, 
   const col = columns.find((c) => c.id === status)!
   return (
     <div ref={setNodeRef}
-      className={`flex w-full flex-col rounded-xl transition-colors lg:flex-1 ${isOver ? 'bg-primary/10 ring-2 ring-primary/30' : 'bg-gray-100/60 dark:bg-gray-800/60'}`}>
+      className={`flex w-full flex-col rounded-xl border-2 border-dashed border-gray-300 transition-colors lg:flex-1 dark:border-gray-600 ${isOver ? 'bg-primary/10 ring-2 ring-primary/30' : 'bg-gray-100/60 dark:bg-gray-800/60'}`}>
       <div className="flex items-center justify-between border-b border-gray-200/80 px-4 py-3 dark:border-gray-700/60">
         <div className="flex items-center gap-2.5">
           <col.icon className={`h-4 w-4 ${col.color}`} />
@@ -133,7 +133,7 @@ export function TasksPage() {
   if (loading) return <BoardSkeleton />
 
   return (
-    <div className="space-y-4 lg:space-y-6 rounded-xl border-2 border-dashed border-gray-400 p-5 dark:border-gray-500">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white lg:text-2xl">Tasks</h1>
       </div>
