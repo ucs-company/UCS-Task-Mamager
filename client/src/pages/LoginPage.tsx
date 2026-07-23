@@ -32,7 +32,7 @@ export function LoginPage() {
     setError('')
     setSuccess('')
     if (password !== confirmPw) { setError('Passwords do not match'); setLoading(false); return }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); setLoading(false); return }
+    if (password.length < 8) { setError('Password must be at least 8 characters'); setLoading(false); return }
     setLoading(true)
     if (!signUp || !setActive) { setLoading(false); return }
     try {
@@ -210,7 +210,7 @@ export function LoginPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required
+                  <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" required
                     className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
                   <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

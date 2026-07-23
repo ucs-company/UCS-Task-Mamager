@@ -33,7 +33,7 @@ app.post('/api/users/set-password', async (req, res) => {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'No token' })
   const { password } = req.body
-  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
+  if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' })
   try {
     const { sub } = await verifyToken(authHeader.replace('Bearer ', ''), { secretKey: env.clerkSecretKey })
     await clerkClient.users.updateUser(sub, { password })

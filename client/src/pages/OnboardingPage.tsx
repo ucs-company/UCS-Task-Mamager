@@ -19,7 +19,7 @@ export function OnboardingPage() {
 
   const handleSubmit = async () => {
     if (password !== confirmPw) { setError('Passwords do not match'); return }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return }
+    if (password.length < 8) { setError('Password must be at least 8 characters'); return }
     setError('')
     setSaving(true)
     try {
@@ -89,7 +89,7 @@ export function OnboardingPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Create a password</label>
                 <div className="relative">
                   <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 6 characters" autoFocus
+                    placeholder="At least 8 characters" autoFocus
                     className="w-full rounded-xl border border-gray-300 bg-white/80 py-3 pl-3 pr-10 text-sm backdrop-blur-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-800/80 dark:text-gray-100" />
                   <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
