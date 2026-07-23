@@ -7,7 +7,50 @@ import { api } from '../lib/api'
 import { ProfileSkeleton } from '../components/ui/PageSkeleton'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { Mail, ClipboardList, CheckCircle2, Lock, Eye, EyeOff, LogOut } from 'lucide-react'
+import { Mail, ClipboardList, CheckCircle2, Lock, Eye, EyeOff, LogOut, AlertTriangle } from 'lucide-react'
+
+function FixEmailSignIn({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
+  const [open, setOpen] = useState(false)
+  const [pw, setPw] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  const handleFix = async () => {
+    if (!pw) return
+    setLoading(true)
+    setMsg('')
+    try {
+      await (user as any).update({ password: pw })
+      setMsg('Email sign-in fixed! You can now log in with email and password.')
+      setPw('')
+    } catch (err: any) {
+      setMsg(err.errors?.[0]?.longMessage || err.message || 'Failed')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors">
+        <AlertTriangle className="h-5 w-5 text-amber-600" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Fix Email Sign-in</p>
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            {open ? 'Enter your password to re-link it' : "If you can't sign in with email and password, fix it here"}
+          </p>
+        </div>
+      </button>
+      {open && (
+        <div className="border-t border-amber-200 px-5 py-4 space-y-3 dark:border-amber-800">
+          <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Enter your password" autoFocus
+            className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 dark:border-amber-700 dark:bg-gray-800 dark:text-gray-100" />
+          {msg && <p className={`text-sm ${msg.includes('fixed') ? 'text-emerald-600' : 'text-red-500'}`}>{msg}</p>}
+          <Button size="sm" onClick={handleFix} loading={loading} disabled={!pw}>Fix Sign In</Button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function ProfilePage() {
   const { profile, signOut, refreshProfile } = useAuth()
@@ -99,6 +142,11 @@ export function ProfilePage() {
           <div className="flex items-center gap-3"><div className="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/30 lg:p-3"><CheckCircle2 className="h-5 w-5 text-emerald-600" /></div><div><p className="text-xl font-bold text-gray-900 dark:text-white lg:text-2xl">{completed}</p><p className="text-xs text-gray-500 lg:text-sm">Completed</p></div></div>
         </div>
       </div>
+
+      {/* Fix Email Sign-in */}
+      {user?.externalAccounts?.length > 0 && (
+        <FixEmailSignIn user={user} />
+      )}
 
       {/* Change Password */}
       <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
