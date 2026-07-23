@@ -1,27 +1,69 @@
 import { useState } from 'react'
-import { useSignIn } from '@clerk/clerk-react'
+import { useSignIn, useSignUp } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { ClipboardList, Mail, Lock, Eye, EyeOff, UserPlus } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 
 export function LoginPage() {
-  const { signIn, isLoaded, setActive } = useSignIn()
+  const { signIn, isLoaded: signInLoaded, setActive } = useSignIn()
+  const { signUp, isLoaded: signUpLoaded } = useSignUp()
   const navigate = useNavigate()
-  const [mode, setMode] = useState<'signin' | 'forgot'>('signin')
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot' | 'verify'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [code, setCode] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleGoogleLogin = async () => {
-    if (!isLoaded) return
+    if (!signInLoaded) return
     await signIn.authenticateWithRedirect({
       strategy: 'oauth_google',
       redirectUrl: window.location.origin + '/sso-callback',
       redirectUrlComplete: window.location.origin + '/tasks',
     })
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    if (password !== confirmPw) { setError('Passwords do not match'); setLoading(false); return }
+    if (password.length < 6) { setError('Password must be at least 6 characters'); setLoading(false); return }
+    setLoading(true)
+    try {
+      const result = await signUp.create({ emailAddress: email, password })
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        navigate('/tasks')
+      } else {
+        setMode('verify')
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || err.message || 'Something went wrong')
+    }
+    setLoading(false)
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code })
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        navigate('/tasks')
+      } else {
+        setError('Verification failed. Try again.')
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || err.message || 'Invalid code')
+    }
+    setLoading(false)
   }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -31,21 +73,33 @@ export function LoginPage() {
     setLoading(true)
     if (!signIn) { setLoading(false); return }
     try {
-      if (mode === 'signin') {
-        const result = await signIn.create({ identifier: email, password })
-        if (result.status === 'complete') {
-          await setActive({ session: result.createdSessionId })
-          navigate('/tasks')
-        }
-      } else {
-        await signIn.create({ strategy: 'reset_password_email_code', identifier: email })
-        setSuccess('Password reset email sent!')
+      const result = await signIn.create({ identifier: email, password })
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        navigate('/tasks')
       }
     } catch (err: any) {
       setError(err.errors?.[0]?.longMessage || err.message || 'Something went wrong')
     }
     setLoading(false)
   }
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setLoading(true)
+    if (!signIn) { setLoading(false); return }
+    try {
+      await signIn.create({ strategy: 'reset_password_email_code', identifier: email })
+      setSuccess('Password reset email sent!')
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || err.message || 'Something went wrong')
+    }
+    setLoading(false)
+  }
+
+  const isLoaded = signInLoaded && signUpLoaded
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900">
@@ -84,8 +138,16 @@ export function LoginPage() {
             <p className="mt-1 text-sm text-gray-500">Sign in to manage your tasks</p>
           </div>
 
+          {/* Mode Tabs */}
+          <div className="flex rounded-xl border border-gray-200 p-1 dark:border-gray-700">
+            <button type="button" onClick={() => { setMode('signin'); setError(''); setSuccess('') }}
+              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${mode === 'signin' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>Sign In</button>
+            <button type="button" onClick={() => { setMode('signup'); setError(''); setSuccess('') }}
+              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${mode === 'signup' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>Sign Up</button>
+          </div>
+
           {/* Google Button */}
-          {mode !== 'forgot' && (
+          {mode !== 'forgot' && mode !== 'verify' && (
             <button onClick={handleGoogleLogin} disabled={!isLoaded}
               className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.98] disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
               <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -98,24 +160,23 @@ export function LoginPage() {
             </button>
           )}
 
-          {mode !== 'forgot' && (
+          {mode !== 'forgot' && mode !== 'verify' && (
             <div className="relative">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200 dark:border-gray-700" /></div>
               <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-3 text-gray-400 dark:text-gray-500 lg:bg-white dark:lg:bg-gray-900">or continue with email</span></div>
             </div>
           )}
 
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@ucs.com" required
-                  className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+          {mode === 'signin' && (
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@ucs.com" required
+                    className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+                </div>
               </div>
-            </div>
-
-            {mode !== 'forgot' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                 <div className="relative">
@@ -127,27 +188,76 @@ export function LoginPage() {
                   </button>
                 </div>
               </div>
-            )}
-
-            {mode === 'signin' && (
               <button type="button" onClick={() => setMode('forgot')} className="text-xs text-primary hover:underline">Forgot password?</button>
-            )}
+              {error && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">{error}</p>}
+              <Button type="submit" className="w-full" loading={loading}>Sign In</Button>
+            </form>
+          )}
 
-            {error && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">{error}</p>}
-            {success && <p className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">{success}</p>}
+          {mode === 'signup' && (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@ucs.com" required
+                    className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required
+                    className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input type={showPw ? 'text' : 'password'} value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} placeholder="Repeat your password" required
+                    className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+                </div>
+              </div>
+              {error && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">{error}</p>}
+              <Button type="submit" className="w-full" loading={loading}><UserPlus className="h-4 w-4 mr-1.5" /> Create Account</Button>
+            </form>
+          )}
 
-            <Button type="submit" className="w-full" loading={loading}>
-              {mode === 'signin' ? 'Sign In' : 'Send Reset Email'}
-            </Button>
+          {mode === 'verify' && (
+            <form onSubmit={handleVerify} className="space-y-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Enter the verification code sent to <strong>{email}</strong></p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verification Code</label>
+                <input type="text" value={code} onChange={(e) => setCode(e.target.value)} placeholder="000000" required autoFocus
+                  className="w-full rounded-xl border border-gray-300 bg-white py-2.5 px-3 text-sm text-center tracking-[0.5em] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+              </div>
+              {error && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">{error}</p>}
+              <Button type="submit" className="w-full" loading={loading}>Verify Email</Button>
+              <button type="button" onClick={() => setMode('signup')} className="w-full text-center text-xs text-gray-500 hover:text-primary">Back to sign up</button>
+            </form>
+          )}
 
-            <p className="text-center text-xs text-gray-500">
-              {mode === 'signin' ? (
-                <button type="button" onClick={() => setMode('forgot')} className="text-primary hover:underline">Forgot password?</button>
-              ) : (
-                <button type="button" onClick={() => setMode('signin')} className="text-primary hover:underline font-medium">Back to sign in</button>
-              )}
-            </p>
-          </form>
+          {mode === 'forgot' && (
+            <form onSubmit={handleForgot} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@ucs.com" required
+                    className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+                </div>
+              </div>
+              {error && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">{error}</p>}
+              {success && <p className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">{success}</p>}
+              <Button type="submit" className="w-full" loading={loading}>Send Reset Email</Button>
+              <button type="button" onClick={() => { setMode('signin'); setError(''); setSuccess('') }} className="w-full text-center text-xs text-gray-500 hover:text-primary">Back to sign in</button>
+            </form>
+          )}
         </div>
       </div>
     </div>
