@@ -2,16 +2,21 @@ import { useEffect, useState, useRef } from 'react'
 import { useTasks } from '../hooks/useTasks'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../lib/api'
 import { DashboardSkeleton } from '../components/ui/PageSkeleton'
+import { Badge } from '../components/ui/Badge'
 import { Link } from 'react-router-dom'
-import { ListTodo, CheckCircle2, Clock, LogOut, User } from 'lucide-react'
+import { ListTodo, CheckCircle2, Clock, LogOut, User, Mail } from 'lucide-react'
 import { STATUS_LABELS } from '../lib/constants'
+import type { User as AppUser } from '../types'
 
 export function DashboardPage() {
-  const { profile, signOut } = useAuth()
-  const { tasks, loading } = useTasks()
+  const { profile, signOut, isAdmin } = useAuth()
+  const { tasks, loading: tasksLoading } = useTasks()
   const navigate = useNavigate()
   const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0 })
+  const [users, setUsers] = useState<AppUser[]>([])
+  const [usersLoading, setUsersLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -30,7 +35,11 @@ export function DashboardPage() {
     setStats({ total: tasks.length, completed, inProgress })
   }, [tasks])
 
-  if (loading) return <DashboardSkeleton />
+  useEffect(() => {
+    api.getUsers().then(({ users: data }) => { setUsers(data as AppUser[]); setUsersLoading(false) }).catch(() => setUsersLoading(false))
+  }, [])
+
+  if (tasksLoading || usersLoading) return <DashboardSkeleton />
 
   const recentTasks = tasks.slice(0, 5)
 
@@ -66,6 +75,7 @@ export function DashboardPage() {
           )}
         </div>
       </div>
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
         {[
           { label: 'Total', value: stats.total, icon: ListTodo, color: 'text-primary', bg: 'bg-primary-light dark:bg-primary/20' },
@@ -83,6 +93,43 @@ export function DashboardPage() {
           </div>
         ))}
       </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Team</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+          {users.filter((u) => isAdmin || u.role !== 'admin').map((user) => {
+            const userTasks = tasks.filter((t) => t.created_by === user.id || t.task_assignees?.some((a) => a.user_id === user.id))
+            const completed = userTasks.filter((t) => t.status === 'done').length
+            const ongoing = userTasks.filter((t) => t.status === 'partially_done').length
+            const todo = userTasks.filter((t) => t.status === 'pending').length
+            return (
+              <button
+                key={user.id}
+                onClick={() => isAdmin ? navigate(`/team/${user.id}`) : undefined}
+                className={`rounded-xl border border-gray-200 bg-white p-4 text-left transition-all dark:border-gray-700 dark:bg-gray-800 lg:p-5 ${
+                  isAdmin ? 'cursor-pointer hover:shadow-md hover:border-primary/30' : 'cursor-default'
+                }`}
+              >
+                <div className="flex items-center gap-3 lg:gap-4">
+                  {user.avatar_url ? <img src={user.avatar_url} alt="" className="h-10 w-10 rounded-full lg:h-12 lg:w-12" />
+                    : <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base font-medium text-white lg:h-12 lg:w-12 lg:text-lg">{user.name?.charAt(0) || 'U'}</div>}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white lg:text-base">{user.name || 'Unknown'}</h3>
+                    <div className="flex items-center gap-1 mt-0.5"><Mail className="h-3 w-3 flex-shrink-0 text-gray-400" /><span className="text-xs text-gray-500 truncate dark:text-gray-400 lg:text-sm">{user.email}</span></div>
+                  </div>
+                  {user.role === 'admin' && <Badge variant="info">Admin</Badge>}
+                </div>
+                <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 lg:mt-4 lg:text-sm">
+                  <span><strong className="text-gray-900 dark:text-white">{todo}</strong> Pending</span>
+                  <span><strong className="text-amber-600">{ongoing}</strong> Active</span>
+                  <span><strong className="text-emerald-600">{completed}</strong> Done</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700 lg:px-6 lg:py-4">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white lg:text-base">Recent Tasks</h2>

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../hooks/useAuth'
-import { LayoutDashboard, Columns3, Users, ClipboardList, Table2 } from 'lucide-react'
+import { LayoutDashboard, Columns3, ClipboardList, Table2 } from 'lucide-react'
 
 export function Sidebar() {
   const { isAdmin } = useAuth()
@@ -54,16 +54,6 @@ export function Sidebar() {
           </NavLink>
         )}
 
-        <NavLink
-          to="/team"
-          className={({ isActive }) =>
-            cn('flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-              isActive ? 'bg-primary-light text-primary dark:bg-primary/20 dark:text-primary-light'
-                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800')
-          }
-        >
-          <Users className="h-5 w-5" /> Team
-        </NavLink>
       </nav>
     </aside>
   )

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../hooks/useAuth'
-import { LayoutDashboard, ListTodo, Users, User } from 'lucide-react'
+import { LayoutDashboard, ListTodo, User } from 'lucide-react'
 
 export function MobileTabBar() {
   const { isAdmin } = useAuth()
@@ -35,12 +35,6 @@ export function MobileTabBar() {
           )}
         </NavLink>
       </div>
-
-      <NavLink to="/team" className={linkClass}>
-        {({ isActive }) => (
-          <><Users className={cn('h-5 w-5', isActive && 'fill-primary/10')} /><span>Team</span></>
-        )}
-      </NavLink>
 
       {!isAdmin && (
         <NavLink to="/profile" className={linkClass}>

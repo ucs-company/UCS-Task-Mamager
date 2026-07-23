@@ -9,7 +9,6 @@ import { DashboardPage } from './pages/DashboardPage'
 import { TasksPage } from './pages/TasksPage'
 import { TaskListPage } from './pages/TaskListPage'
 import { TaskDetailPage } from './pages/TaskDetailPage'
-import { TeamPage } from './pages/TeamPage'
 import { UserTasksPage } from './pages/UserTasksPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { OnboardingPage } from './pages/OnboardingPage'
@@ -64,7 +63,6 @@ function AppRoutes() {
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/tasks/list" element={<AdminRoute><TaskListPage /></AdminRoute>} />
         <Route path="/tasks/:id" element={<TaskDetailPage />} />
-        <Route path="/team" element={<TeamPage />} />
         <Route path="/team/:userId" element={<UserTasksPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
