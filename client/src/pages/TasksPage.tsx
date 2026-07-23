@@ -87,7 +87,7 @@ export function TasksPage() {
   const [saving, setSaving] = useState(false)
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 20 } }),
   )
   const getColumnTasks = useCallback((status: TaskStatus) => tasks.filter((t) => t.status === status), [tasks])
 
