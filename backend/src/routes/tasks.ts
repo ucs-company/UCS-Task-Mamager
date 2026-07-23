@@ -41,6 +41,7 @@ router.post('/', async (req: Request, res: Response) => {
     title: title?.trim() || '',
     description: description?.trim() || title?.trim() || '',
     status: status || 'pending',
+    completed_at: status === 'done' ? new Date().toISOString() : null,
     created_by: req.userId,
   }).select().single()
 
@@ -60,13 +61,20 @@ router.put('/:id', async (req: Request, res: Response) => {
   const { title, description, status, assignee_ids } = req.body
   const isAdmin = req.userRole === 'admin'
 
-  const { data: existing } = await supabaseAdmin.from('tasks').select('created_by').eq('id', req.params.id).single()
+  const { data: existing } = await supabaseAdmin.from('tasks').select('created_by, status, completed_at').eq('id', req.params.id).single()
   if (!existing) return res.status(404).json({ error: 'Task not found' })
   if (existing.created_by !== req.userId && !isAdmin) return res.status(403).json({ error: 'Not authorized' })
 
-  const { data: task, error } = await supabaseAdmin.from('tasks').update({
-    title: title?.trim(), description: description?.trim(), status,
-  }).eq('id', req.params.id).select().single()
+  const updates: Record<string, unknown> = {}
+  if (title !== undefined) updates.title = title?.trim()
+  if (description !== undefined) updates.description = description?.trim()
+  if (status !== undefined) {
+    updates.status = status
+    if (status === 'done' && existing.status !== 'done') updates.completed_at = new Date().toISOString()
+    if (status !== 'done' && existing.status === 'done') updates.completed_at = null
+  }
+
+  const { data: task, error } = await supabaseAdmin.from('tasks').update(updates).eq('id', req.params.id).select().single()
 
   if (error) return res.status(500).json({ error: error.message })
 
