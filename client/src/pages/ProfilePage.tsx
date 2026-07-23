@@ -9,7 +9,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Mail, ClipboardList, CheckCircle2, Lock, Eye, EyeOff, LogOut, AlertTriangle } from 'lucide-react'
 
-function FixEmailSignIn({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> & Record<string, any> }) {
+function FixEmailSignIn() {
   const [open, setOpen] = useState(false)
   const [pw, setPw] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,7 +20,7 @@ function FixEmailSignIn({ user }: { user: NonNullable<ReturnType<typeof useUser>
     setLoading(true)
     setMsg('')
     try {
-      await (user as any).update({ password: pw })
+      await api.setPassword(pw)
       setMsg('Email sign-in fixed! You can now log in with email and password.')
       setPw('')
     } catch (err: any) {
@@ -94,7 +94,7 @@ export function ProfilePage() {
     setError('')
     setSuccess('')
     try {
-      await (user as any)?.update({ password: newPw })
+      await (user as any).changePassword({ currentPassword: currentPw, newPassword: newPw })
       setSuccess('Password updated!')
       setCurrentPw('')
       setNewPw('')
@@ -145,7 +145,7 @@ export function ProfilePage() {
 
       {/* Fix Email Sign-in */}
       {user?.externalAccounts && user.externalAccounts.length > 0 && (
-        <FixEmailSignIn user={user} />
+        <FixEmailSignIn />
       )}
 
       {/* Change Password */}
