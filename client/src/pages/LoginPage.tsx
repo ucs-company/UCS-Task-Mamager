@@ -34,6 +34,7 @@ export function LoginPage() {
     if (password !== confirmPw) { setError('Passwords do not match'); setLoading(false); return }
     if (password.length < 6) { setError('Password must be at least 6 characters'); setLoading(false); return }
     setLoading(true)
+    if (!signUp || !setActive) { setLoading(false); return }
     try {
       const result = await signUp.create({ emailAddress: email, password })
       if (result.status === 'complete') {
@@ -52,6 +53,7 @@ export function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    if (!signUp || !setActive) { setLoading(false); return }
     try {
       const result = await signUp.attemptEmailAddressVerification({ code })
       if (result.status === 'complete') {
