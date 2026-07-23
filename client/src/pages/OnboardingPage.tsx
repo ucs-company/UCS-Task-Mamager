@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '@clerk/clerk-react'
 import { api } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/Button'
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Check } from 'lucide-react'
 
 export function OnboardingPage() {
+  const { user } = useUser()
   const { profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const defaultName = profile?.email ? profile.email.split('@')[0] : ''
@@ -24,8 +26,8 @@ export function OnboardingPage() {
     setSaving(true)
     try {
       if (displayName.trim()) await api.updateUser({ name: displayName.trim(), onboarded: true })
-      if (password) {
-        try { await api.setPassword(password) } catch (e: any) {
+      if (password && user) {
+        try { await user.update({ password }) } catch (e: any) {
           console.error('Password update failed:', e)
         }
       }
