@@ -38,7 +38,7 @@ router.post('/', async (req: Request, res: Response) => {
   if (!description?.trim() && !title?.trim()) return res.status(400).json({ error: 'Description is required' })
 
   const { data: task, error } = await supabaseAdmin.from('tasks').insert({
-    title: title?.trim() || null,
+    title: title?.trim() || '',
     description: description?.trim() || title?.trim() || '',
     status: status || 'pending',
     priority: priority || 'medium',
