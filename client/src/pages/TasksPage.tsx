@@ -18,30 +18,21 @@ const columns: { id: TaskStatus; icon: typeof Circle; color: string }[] = [
   { id: 'done', icon: CheckCircle2, color: 'text-emerald-500' },
 ]
 
-const statusBarColor: Record<TaskStatus, string> = {
-  pending: 'bg-gray-400',
-  partially_done: 'bg-blue-500',
-  done: 'bg-emerald-500',
-}
-
 function DraggableTask({ task }: { task: Task }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task.id })
   const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 50 } : undefined
   return (
     <Link ref={setNodeRef} to={`/tasks/${task.id}`} {...listeners} {...attributes} style={style}
-      className={`group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 ${isDragging ? 'opacity-30' : ''}`}>
-      <div className={`absolute left-0 top-0 h-full w-1 ${statusBarColor[task.status]}`} />
-      <div className="p-3 pl-4">
-        <p className="text-sm font-medium leading-snug text-gray-900 dark:text-white line-clamp-2">{task.description || task.title}</p>
-        {task.task_assignees && task.task_assignees.length > 0 && (
-          <div className="mt-2.5 flex items-center gap-1.5">
-            {task.task_assignees.slice(0, 3).map((a) => (
-              <div key={a.user_id} className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white ring-1 ring-white dark:ring-gray-800" title={a.users?.name || ''}>{a.users?.name?.charAt(0) || '?'}</div>
-            ))}
-            {task.task_assignees.length > 3 && <span className="text-[11px] text-gray-400 font-medium">+{task.task_assignees.length - 3}</span>}
-          </div>
-        )}
-      </div>
+      className={`block rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800 ${isDragging ? 'opacity-30' : ''}`}>
+      <p className="text-sm font-medium text-gray-900 dark:text-white">{task.description || task.title}</p>
+      {task.task_assignees && task.task_assignees.length > 0 && (
+        <div className="mt-2 flex items-center gap-1">
+          {task.task_assignees.slice(0, 3).map((a) => (
+            <div key={a.user_id} className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">{a.users?.name?.charAt(0) || '?'}</div>
+          ))}
+          {task.task_assignees.length > 3 && <span className="text-xs text-gray-400">+{task.task_assignees.length - 3}</span>}
+        </div>
+      )}
     </Link>
   )
 }
