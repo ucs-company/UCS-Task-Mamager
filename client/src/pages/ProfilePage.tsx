@@ -9,7 +9,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Mail, ClipboardList, CheckCircle2, Lock, Eye, EyeOff, LogOut, AlertTriangle } from 'lucide-react'
 
-function FixEmailSignIn({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
+function FixEmailSignIn({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> & Record<string, any> }) {
   const [open, setOpen] = useState(false)
   const [pw, setPw] = useState('')
   const [loading, setLoading] = useState(false)
@@ -144,7 +144,7 @@ export function ProfilePage() {
       </div>
 
       {/* Fix Email Sign-in */}
-      {user?.externalAccounts?.length > 0 && (
+      {user?.externalAccounts && user.externalAccounts.length > 0 && (
         <FixEmailSignIn user={user} />
       )}
 

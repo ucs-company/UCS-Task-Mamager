@@ -7,9 +7,8 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Trash2, Send, MessageSquare, History } from 'lucide-react'
-import { formatDateTime, getTimeAgo } from '../lib/utils'
+import { getTimeAgo } from '../lib/utils'
 import { STATUS_LABELS } from '../lib/constants'
-import type { Task } from '../types'
 import type { ActivityLog } from '../types'
 
 export function TaskDetailPage() {

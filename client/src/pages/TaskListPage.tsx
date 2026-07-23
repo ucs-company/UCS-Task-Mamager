@@ -53,7 +53,7 @@ export function TaskListPage() {
   }, [tasks, isAdmin])
 
   const filtered = useMemo(() => tasks.filter((t) => {
-    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false
+    if (search && !(t.title || '').toLowerCase().includes(search.toLowerCase()) && !t.description.toLowerCase().includes(search.toLowerCase())) return false
     if (statusFilter && t.status !== statusFilter) return false
     if (priorityFilter && t.priority !== priorityFilter) return false
     return true

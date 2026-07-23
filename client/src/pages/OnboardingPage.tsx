@@ -27,7 +27,7 @@ export function OnboardingPage() {
     try {
       if (displayName.trim()) await api.updateUser({ name: displayName.trim(), onboarded: true })
       if (password && user) {
-        try { await user.update({ password }) } catch (e: any) {
+        try { await (user as any).update({ password }) } catch (e: any) {
           console.error('Password update failed:', e)
         }
       }

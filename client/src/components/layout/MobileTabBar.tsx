@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../hooks/useAuth'
-import { LayoutDashboard, Columns3, ListTodo, Users, User, Table2 } from 'lucide-react'
+import { LayoutDashboard, ListTodo, Users, User } from 'lucide-react'
 
 export function MobileTabBar() {
   const { isAdmin } = useAuth()
