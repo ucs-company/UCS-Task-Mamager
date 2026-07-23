@@ -83,6 +83,8 @@ function DroppableColumn({ status, children, count, adding, desc, onDescChange, 
   )
 }
 
+const todayStr = () => new Date().toISOString().split('T')[0]
+
 export function TasksPage() {
   const { tasks, loading, refetch } = useTasks()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
@@ -92,7 +94,9 @@ export function TasksPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
-  const getColumnTasks = useCallback((status: TaskStatus) => tasks.filter((t) => t.status === status), [tasks])
+  const getColumnTasks = useCallback((status: TaskStatus) => tasks.filter((t) =>
+    t.status === status && (status !== 'done' || (t.completed_at && t.completed_at.startsWith(todayStr())))
+  ), [tasks])
 
   const handleDragStart = (event: DragStartEvent) => {
     const task = tasks.find((t) => t.id === event.active.id)

@@ -71,6 +71,7 @@ export function ProfilePage() {
 
   const myTasks = tasks.filter((t) => t.created_by === profile.id)
   const completed = myTasks.filter((t) => t.status === 'done').length
+  const completedTasks = myTasks.filter((t) => t.status === 'done').sort((a, b) => new Date(b.completed_at || b.created_at).getTime() - new Date(a.completed_at || a.created_at).getTime())
 
   const handleSaveName = async () => {
     if (!name.trim()) return
@@ -184,10 +185,22 @@ export function ProfilePage() {
       <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-700 lg:px-6 lg:py-4"><h2 className="text-sm font-semibold text-gray-900 dark:text-white lg:text-base">My Recent Tasks</h2></div>
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-          {myTasks.slice(0, 5).map((task) => (
-            <div key={task.id} className="px-4 py-3 lg:px-6 lg:py-3">                <p className="text-sm font-medium text-gray-900 dark:text-white">{task.description || task.title}</p><p className="text-xs text-gray-500">Created {formatDate(task.created_at)}</p></div>
+          {myTasks.filter((t) => t.status !== 'done').slice(0, 5).map((task) => (
+            <div key={task.id} className="px-4 py-3 lg:px-6 lg:py-3"><p className="text-sm font-medium text-gray-900 dark:text-white">{task.description || task.title}</p><p className="text-xs text-gray-500">Created {formatDate(task.created_at)}</p></div>
           ))}
-          {myTasks.length === 0 && <p className="px-4 py-8 text-center text-sm text-gray-400 lg:px-6">No tasks created yet</p>}
+          {myTasks.filter((t) => t.status !== 'done').length === 0 && <p className="px-4 py-8 text-center text-sm text-gray-400 lg:px-6">No active tasks</p>}
+        </div>
+      </div>
+
+      {/* Completed Tasks History */}
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-700 lg:px-6 lg:py-4"><h2 className="text-sm font-semibold text-gray-900 dark:text-white lg:text-base">Task History</h2></div>
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          {completedTasks.length === 0 && <p className="px-4 py-8 text-center text-sm text-gray-400 lg:px-6">No completed tasks yet</p>}
+          {completedTasks.slice(0, 20).map((task) => (
+            <div key={task.id} className="px-4 py-3 lg:px-6 lg:py-3"><p className="text-sm font-medium text-gray-900 dark:text-white">{task.description || task.title}</p><p className="text-xs text-emerald-600">Completed {formatDate2(task.completed_at!)}</p></div>
+          ))}
+          {completedTasks.length > 20 && <div className="px-4 py-3 text-center text-xs text-gray-400">Showing 20 of {completedTasks.length}</div>}
         </div>
       </div>
     </div>
@@ -196,4 +209,7 @@ export function ProfilePage() {
 
 function formatDate(d: string) {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(d))
+}
+function formatDate2(d: string) {
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(d))
 }
