@@ -25,11 +25,6 @@ export function formatDateTime(date: string | Date | null): string {
   }).format(new Date(date))
 }
 
-export function isOverdue(dueDate: string | null): boolean {
-  if (!dueDate) return false
-  return new Date(dueDate) < new Date()
-}
-
 export function getTimeAgo(date: string): string {
   const now = new Date()
   const past = new Date(date)

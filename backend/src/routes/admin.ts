@@ -22,26 +22,18 @@ router.get('/stats', async (_req: Request, res: Response) => {
 
   const completed = tasks.filter((t) => t.status === 'done').length
   const inProgress = tasks.filter((t) => t.status === 'partially_done').length
-  const overdue = tasks.filter((t) => {
-    if (!t.due_date || t.completed_at) return false
-    return new Date(t.due_date) < new Date()
-  }).length
 
   const byStatus = { pending: 0, partially_done: 0, done: 0 }
-  const byPriority = { low: 0, medium: 0, high: 0, critical: 0 }
 
-  tasks.forEach((t: { status: keyof typeof byStatus; priority: keyof typeof byPriority }) => {
+  tasks.forEach((t: { status: keyof typeof byStatus }) => {
     byStatus[t.status]++
-    byPriority[t.priority]++
   })
 
   res.json({
     total_tasks: tasks.length,
     completed_tasks: completed,
     in_progress_tasks: inProgress,
-    overdue_tasks: overdue,
     tasks_by_status: byStatus,
-    tasks_by_priority: byPriority,
   })
 })
 

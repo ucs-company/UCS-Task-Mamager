@@ -3,10 +3,8 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useTasks } from '../hooks/useTasks'
 import { UserTasksSkeleton } from '../components/ui/PageSkeleton'
-import { Badge } from '../components/ui/Badge'
-import { ArrowLeft, Circle, Clock, CheckCircle2, Calendar, Mail } from 'lucide-react'
-import { formatDate, isOverdue } from '../lib/utils'
-import { STATUS_LABELS, PRIORITY_LABELS } from '../lib/constants'
+import { ArrowLeft, Circle, Clock, CheckCircle2, Mail } from 'lucide-react'
+import { STATUS_LABELS } from '../lib/constants'
 import type { User, TaskStatus } from '../types'
 
 const statusIcons: Record<TaskStatus, typeof Circle> = {
@@ -74,14 +72,7 @@ export function UserTasksPage() {
                 <Link key={task.id} to={`/tasks/${task.id}`} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-750">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">{task.description || task.title}</p>
-                    {task.due_date && <p className={`mt-0.5 flex items-center gap-1 text-xs ${isOverdue(task.due_date) && status !== 'done' ? 'text-red-500' : 'text-gray-400'}`}>
-                      <Calendar className="h-3 w-3" />{formatDate(task.due_date)}
-                    </p>}
                   </div>
-                  <Badge variant={
-                    task.priority === 'critical' ? 'danger' : task.priority === 'high' ? 'warning' :
-                    task.priority === 'medium' ? 'info' : 'default'
-                  }>{PRIORITY_LABELS[task.priority]}</Badge>
                 </Link>
               ))}
             </div>

@@ -4,15 +4,14 @@ import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { DashboardSkeleton } from '../components/ui/PageSkeleton'
 import { Link } from 'react-router-dom'
-import { ListTodo, CheckCircle2, Clock, AlertTriangle, LogOut, User } from 'lucide-react'
-import { formatDate, isOverdue } from '../lib/utils'
+import { ListTodo, CheckCircle2, Clock, LogOut, User } from 'lucide-react'
 import { STATUS_LABELS } from '../lib/constants'
 
 export function DashboardPage() {
   const { profile, signOut } = useAuth()
   const { tasks, loading } = useTasks()
   const navigate = useNavigate()
-  const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, overdue: 0 })
+  const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0 })
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -28,8 +27,7 @@ export function DashboardPage() {
     if (!tasks.length) return
     const completed = tasks.filter((t) => t.status === 'done').length
     const inProgress = tasks.filter((t) => t.status === 'partially_done').length
-    const overdue = tasks.filter((t) => !t.completed_at && isOverdue(t.due_date)).length
-    setStats({ total: tasks.length, completed, inProgress, overdue })
+    setStats({ total: tasks.length, completed, inProgress })
   }, [tasks])
 
   if (loading) return <DashboardSkeleton />
@@ -68,12 +66,11 @@ export function DashboardPage() {
           )}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
         {[
           { label: 'Total', value: stats.total, icon: ListTodo, color: 'text-primary', bg: 'bg-primary-light dark:bg-primary/20' },
           { label: 'Completed', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
           { label: 'In Progress', value: stats.inProgress, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-          { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-5">
             <div className="flex items-center justify-between">
@@ -99,7 +96,6 @@ export function DashboardPage() {
               </div>
               <div className="hidden items-center gap-3 text-sm text-gray-500 sm:flex">
                 <span>{STATUS_LABELS[task.status]}</span>
-                {task.due_date && <span>{isOverdue(task.due_date) ? '🔴' : '📅'} {formatDate(task.due_date)}</span>}
               </div>
             </Link>
           ))}

@@ -5,10 +5,10 @@
 -- UPDATE users SET role = 'admin' WHERE email = 'admin@ucs.com';
 
 -- Sample tasks (run after at least one user exists)
--- INSERT INTO tasks (title, description, status, priority, created_by, due_date)
+-- INSERT INTO tasks (title, description, status, created_by)
 -- VALUES
---   ('Design homepage mockup', 'Create wireframes for the new company homepage', 'pending', 'high', (SELECT id FROM users LIMIT 1), NOW() + INTERVAL '7 days'),
---   ('Set up CI/CD pipeline', 'Configure GitHub Actions for automated deployment', 'partially_done', 'critical', (SELECT id FROM users LIMIT 1), NOW() + INTERVAL '3 days'),
---   ('Write API documentation', 'Document all REST endpoints with examples', 'done', 'medium', (SELECT id FROM users LIMIT 1), NOW() - INTERVAL '1 day'),
---   ('Fix login bug', 'Users reporting errors on Google sign-in', 'partially_done', 'critical', (SELECT id FROM users LIMIT 1), NOW() + INTERVAL '1 day'),
---   ('Database backup strategy', 'Implement automated daily backups', 'pending', 'medium', (SELECT id FROM users LIMIT 1), NOW() + INTERVAL '14 days');
+--   ('Design homepage mockup', 'Create wireframes for the new company homepage', 'pending', (SELECT id FROM users LIMIT 1)),
+--   ('Set up CI/CD pipeline', 'Configure GitHub Actions for automated deployment', 'partially_done', (SELECT id FROM users LIMIT 1)),
+--   ('Write API documentation', 'Document all REST endpoints with examples', 'done', (SELECT id FROM users LIMIT 1)),
+--   ('Fix login bug', 'Users reporting errors on Google sign-in', 'partially_done', (SELECT id FROM users LIMIT 1)),
+--   ('Database backup strategy', 'Implement automated daily backups', 'pending', (SELECT id FROM users LIMIT 1));

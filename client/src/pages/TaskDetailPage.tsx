@@ -102,7 +102,6 @@ export function TaskDetailPage() {
                     <strong>{log.users?.name || 'Unknown'}</strong>{' '}
                     {log.action === 'task_created' && 'created this task'}
                     {log.action === 'status_changed' && `changed status from ${log.details?.from} to ${log.details?.to}`}
-                    {log.action === 'priority_changed' && `changed priority from ${log.details?.from} to ${log.details?.to}`}
                     {log.action === 'title_changed' && `renamed task to "${log.details?.to}"`}
                     {log.action === 'task_completed' && 'completed this task'}
                     {log.action === 'user_assigned' && 'assigned a team member'}

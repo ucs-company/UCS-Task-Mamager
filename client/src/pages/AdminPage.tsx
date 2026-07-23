@@ -8,21 +8,14 @@ import { Modal } from '../components/ui/Modal'
 import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
 import { Printer, Download, ChevronRight, Plus, Check } from 'lucide-react'
-import { cn, formatDate, isOverdue } from '../lib/utils'
-import { STATUS_LABELS, PRIORITY_LABELS } from '../lib/constants'
-import type { Task, AdminStats, TaskStatus, TaskPriority, User } from '../types'
+import { cn } from '../lib/utils'
+import { STATUS_LABELS } from '../lib/constants'
+import type { Task, AdminStats, TaskStatus, User } from '../types'
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
   { value: 'partially_done', label: 'Partially Done' },
   { value: 'done', label: 'Done' },
-]
-
-const priorityOptions = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
 ]
 
 export function AdminPage() {
@@ -37,7 +30,6 @@ export function AdminPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<TaskStatus>('pending')
-  const [priority, setPriority] = useState<TaskPriority>('medium')
   const [users, setUsers] = useState<User[]>([])
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
 
@@ -58,17 +50,13 @@ export function AdminPage() {
       setTasks(taskData as unknown as Task[])
       const completed = taskData.filter((t: Task) => t.status === 'done').length
       const inProgress = taskData.filter((t: Task) => t.status === 'partially_done').length
-      const overdue = taskData.filter((t: Task) => !t.completed_at && isOverdue(t.due_date)).length
       const byStatus = { pending: 0, partially_done: 0, done: 0 }
-      const byPriority = { low: 0, medium: 0, high: 0, critical: 0 }
-      taskData.forEach((t: Task) => { byStatus[t.status]++; byPriority[t.priority]++ })
+      taskData.forEach((t: Task) => { byStatus[t.status]++ })
       setStats({
         total_tasks: taskData.length,
         completed_tasks: completed,
         in_progress_tasks: inProgress,
-        overdue_tasks: overdue,
         tasks_by_status: byStatus,
-        tasks_by_priority: byPriority,
       })
     }
     setLoading(false)
@@ -77,9 +65,9 @@ export function AdminPage() {
   const handlePrint = () => window.print()
   const handleExport = () => {
     const csv = [
-      ['Title', 'Status', 'Priority', 'Owner', 'Due Date', 'Created'].join(','),
+      ['Task', 'Status', 'Owner', 'Created'].join(','),
       ...tasks.map((t) =>
-        [t.title, t.status, t.priority, t.created_by_user?.name || '', t.due_date || '', t.created_at].join(',')
+        [t.description || t.title || '', t.status, t.created_by_user?.name || '', t.created_at].join(',')
       ),
     ].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -90,7 +78,7 @@ export function AdminPage() {
   }
 
   const openCreate = () => {
-    setTitle(''); setDescription(''); setStatus('pending'); setPriority('medium')
+    setTitle(''); setDescription(''); setStatus('pending')
     setSelectedAssignees([]); setShowCreate(true)
   }
 
@@ -102,7 +90,7 @@ export function AdminPage() {
     const { data } = await supabase.from('tasks').insert({
       title: title.trim(),
       description: description.trim(),
-      status, priority,
+      status,
       created_by: supabaseUser,
     }).select().single()
 
@@ -151,7 +139,6 @@ export function AdminPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Select id="modal-status" label="Status" value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} options={statusOptions} />
-            <Select id="modal-priority" label="Priority" value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} options={priorityOptions} />
           </div>
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Assignees</label>
@@ -183,12 +170,11 @@ export function AdminPage() {
         </form>
       </Modal>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
         {[
           { label: 'Total Tasks', value: stats?.total_tasks || 0 },
           { label: 'Completed', value: stats?.completed_tasks || 0 },
           { label: 'In Progress', value: stats?.in_progress_tasks || 0 },
-          { label: 'Overdue', value: stats?.overdue_tasks || 0 },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-5">
             <p className="text-xs text-gray-500 dark:text-gray-400 lg:text-sm">{label}</p>
@@ -197,44 +183,23 @@ export function AdminPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-6">
-          <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white lg:mb-4 lg:text-base">Tasks by Status</h3>
-          <div className="space-y-2 lg:space-y-3">
-            {Object.entries(stats?.tasks_by_status || {}).map(([status, count]) => {
-              const total = stats?.total_tasks || 1; const pct = Math.round((count / total) * 100)
-              return (
-                <div key={status}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700 dark:text-gray-300">{STATUS_LABELS[status as keyof typeof STATUS_LABELS]}</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{count}</span>
-                  </div>
-                  <div className="mt-1 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                    <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
-                  </div>
+      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-6">
+        <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white lg:mb-4 lg:text-base">Tasks by Status</h3>
+        <div className="space-y-2 lg:space-y-3">
+          {Object.entries(stats?.tasks_by_status || {}).map(([status, count]) => {
+            const total = stats?.total_tasks || 1; const pct = Math.round((count / total) * 100)
+            return (
+              <div key={status}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-700 dark:text-gray-300">{STATUS_LABELS[status as keyof typeof STATUS_LABELS]}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{count}</span>
                 </div>
-              )
-            })}
-          </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-6">
-          <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white lg:mb-4 lg:text-base">Tasks by Priority</h3>
-          <div className="space-y-2 lg:space-y-3">
-            {Object.entries(stats?.tasks_by_priority || {}).map(([priority, count]) => {
-              const total = stats?.total_tasks || 1; const pct = Math.round((count / total) * 100)
-              return (
-                <div key={priority}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="capitalize text-gray-700 dark:text-gray-300">{PRIORITY_LABELS[priority as keyof typeof PRIORITY_LABELS]}</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{count}</span>
-                  </div>
-                  <div className="mt-1 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                    <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
-                  </div>
+                <div className="mt-1 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -247,11 +212,9 @@ export function AdminPage() {
           <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Task</th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Owner</th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Priority</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Due</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -263,14 +226,6 @@ export function AdminPage() {
                     <Badge variant={task.status === 'done' ? 'success' : task.status === 'partially_done' ? 'info' : 'default'}>
                       {STATUS_LABELS[task.status]}
                     </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={task.priority === 'critical' ? 'danger' : task.priority === 'high' ? 'warning' : task.priority === 'medium' ? 'info' : 'default'}>
-                      {PRIORITY_LABELS[task.priority]}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {task.due_date && <span className={isOverdue(task.due_date) ? 'text-red-500' : ''}>{formatDate(task.due_date)}</span>}
                   </td>
                 </tr>
               ))}
@@ -286,9 +241,6 @@ export function AdminPage() {
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge variant={task.status === 'done' ? 'success' : task.status === 'partially_done' ? 'info' : 'default'}>
                     {STATUS_LABELS[task.status]}
-                  </Badge>
-                  <Badge variant={task.priority === 'critical' ? 'danger' : task.priority === 'high' ? 'warning' : task.priority === 'medium' ? 'info' : 'default'}>
-                    {PRIORITY_LABELS[task.priority]}
                   </Badge>
                   <span className="text-xs text-gray-400">{task.created_by_user?.name || 'Unknown'}</span>
                 </div>

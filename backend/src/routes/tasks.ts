@@ -34,15 +34,13 @@ router.get('/:id', async (req: Request, res: Response) => {
 })
 
 router.post('/', async (req: Request, res: Response) => {
-  const { title, description, status, priority, due_date, assignee_ids } = req.body
+  const { title, description, status, assignee_ids } = req.body
   if (!description?.trim() && !title?.trim()) return res.status(400).json({ error: 'Description is required' })
 
   const { data: task, error } = await supabaseAdmin.from('tasks').insert({
     title: title?.trim() || '',
     description: description?.trim() || title?.trim() || '',
     status: status || 'pending',
-    priority: priority || 'medium',
-    due_date: due_date || null,
     created_by: req.userId,
   }).select().single()
 
@@ -59,7 +57,7 @@ router.post('/', async (req: Request, res: Response) => {
 })
 
 router.put('/:id', async (req: Request, res: Response) => {
-  const { title, description, status, priority, due_date, assignee_ids } = req.body
+  const { title, description, status, assignee_ids } = req.body
   const isAdmin = req.userRole === 'admin'
 
   const { data: existing } = await supabaseAdmin.from('tasks').select('created_by').eq('id', req.params.id).single()
@@ -67,7 +65,7 @@ router.put('/:id', async (req: Request, res: Response) => {
   if (existing.created_by !== req.userId && !isAdmin) return res.status(403).json({ error: 'Not authorized' })
 
   const { data: task, error } = await supabaseAdmin.from('tasks').update({
-    title: title?.trim(), description: description?.trim(), status, priority, due_date: due_date || null,
+    title: title?.trim(), description: description?.trim(), status,
   }).eq('id', req.params.id).select().single()
 
   if (error) return res.status(500).json({ error: error.message })

@@ -10,9 +10,9 @@ import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
 import { Link } from 'react-router-dom'
 import { Plus, Search, ChevronRight, Printer, Download, Check } from 'lucide-react'
-import { cn, formatDate, isOverdue } from '../lib/utils'
-import { STATUS_LABELS, PRIORITY_LABELS } from '../lib/constants'
-import type { TaskStatus, TaskPriority, User } from '../types'
+import { cn } from '../lib/utils'
+import { STATUS_LABELS } from '../lib/constants'
+import type { TaskStatus, User } from '../types'
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
@@ -20,51 +20,40 @@ const statusOptions = [
   { value: 'done', label: 'Done' },
 ]
 
-const priorityOptions = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-]
-
 export function TaskListPage() {
   const { tasks, loading, refetch } = useTasks()
   const { isAdmin } = useAuth()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('')
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('')
   const [showCreate, setShowCreate] = useState(false)
   const [saving, setSaving] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newStatus, setNewStatus] = useState<TaskStatus>('pending')
-  const [newPriority, setNewPriority] = useState<TaskPriority>('medium')
   const [users, setUsers] = useState<User[]>([])
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
-  const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, overdue: 0 })
+  const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0 })
 
   useEffect(() => { api.getUsers().then(({ users: data }) => setUsers(data as User[])).catch(() => {}) }, [])
   useEffect(() => {
     if (!isAdmin) return
     const completed = tasks.filter((t) => t.status === 'done').length
     const inProgress = tasks.filter((t) => t.status === 'partially_done').length
-    const overdue = tasks.filter((t) => !t.completed_at && isOverdue(t.due_date)).length
-    setStats({ total: tasks.length, completed, inProgress, overdue })
+    setStats({ total: tasks.length, completed, inProgress })
   }, [tasks, isAdmin])
 
   const filtered = useMemo(() => tasks.filter((t) => {
     if (search && !(t.title || '').toLowerCase().includes(search.toLowerCase()) && !t.description.toLowerCase().includes(search.toLowerCase())) return false
     if (statusFilter && t.status !== statusFilter) return false
-    if (priorityFilter && t.priority !== priorityFilter) return false
     return true
-  }), [tasks, search, statusFilter, priorityFilter])
+  }), [tasks, search, statusFilter])
 
-  const openCreate = () => { setNewTitle(''); setNewDesc(''); setNewStatus('pending'); setNewPriority('medium'); setSelectedAssignees([]); setShowCreate(true) }
-  const handleCreate = async (e: React.FormEvent) => { e.preventDefault(); if (!newTitle.trim()) return; setSaving(true); await api.createTask({ title: newTitle.trim(), description: newDesc.trim(), status: newStatus, priority: newPriority, assignee_ids: selectedAssignees }); setSaving(false); setShowCreate(false); refetch() }
+  const openCreate = () => { setNewTitle(''); setNewDesc(''); setNewStatus('pending'); setSelectedAssignees([]); setShowCreate(true) }
+  const handleCreate = async (e: React.FormEvent) => { e.preventDefault(); if (!newTitle.trim()) return; setSaving(true); await api.createTask({ title: newTitle.trim(), description: newDesc.trim(), status: newStatus, assignee_ids: selectedAssignees }); setSaving(false); setShowCreate(false); refetch() }
   const toggleAssignee = (userId: string) => setSelectedAssignees((prev) => prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId])
   const handleExport = () => {
     const source = isAdmin ? tasks : filtered
-    const csv = [['Title', 'Status', 'Priority', 'Owner', 'Due Date', 'Created'].join(','), ...source.map((t) => [t.title, t.status, t.priority, (t as any).created_by_user?.name || '', t.due_date || '', t.created_at].join(','))].join('\n')
+    const csv = [['Task', 'Status', 'Owner', 'Created'].join(','), ...source.map((t) => [t.description || t.title || '', t.status, (t as any).created_by_user?.name || '', t.created_at].join(','))].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ucs-tasks.csv'; a.click(); URL.revokeObjectURL(url)
   }
 
@@ -96,7 +85,6 @@ export function TaskListPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Select id="m-status" label="Status" value={newStatus} onChange={(e) => setNewStatus(e.target.value as TaskStatus)} options={statusOptions} />
-            <Select id="m-priority" label="Priority" value={newPriority} onChange={(e) => setNewPriority(e.target.value as TaskPriority)} options={priorityOptions} />
           </div>
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Assignees</label>
@@ -121,8 +109,8 @@ export function TaskListPage() {
       </Modal>
 
       {isAdmin && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-          {[{ label: 'Total Tasks', value: stats.total }, { label: 'Completed', value: stats.completed }, { label: 'In Progress', value: stats.inProgress }, { label: 'Overdue', value: stats.overdue }].map(({ label, value }) => (
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
+          {[{ label: 'Total Tasks', value: stats.total }, { label: 'Completed', value: stats.completed }, { label: 'In Progress', value: stats.inProgress }].map(({ label, value }) => (
             <div key={label} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-5">
               <p className="text-xs text-gray-500 lg:text-sm">{label}</p>
               <p className="mt-1 text-2xl font-bold text-gray-900 lg:text-3xl">{value}</p>
@@ -132,24 +120,13 @@ export function TaskListPage() {
       )}
 
       {isAdmin && tasks.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-6">
-            <h3 className="mb-3 text-sm font-semibold text-gray-900 lg:mb-4">Tasks by Status</h3>
-            <div className="space-y-2 lg:space-y-3">
-              {(['pending', 'partially_done', 'done'] as TaskStatus[]).map((s) => {
-                const count = tasks.filter((t) => t.status === s).length; const pct = Math.round((count / tasks.length) * 100)
-                return (<div key={s}><div className="flex items-center justify-between text-sm"><span className="text-gray-700">{STATUS_LABELS[s]}</span><span className="font-medium text-gray-900">{count}</span></div><div className="mt-1 h-2 rounded-full bg-gray-200"><div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div></div>)
-              })}
-            </div>
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-6">
-            <h3 className="mb-3 text-sm font-semibold text-gray-900 lg:mb-4">Tasks by Priority</h3>
-            <div className="space-y-2 lg:space-y-3">
-              {(['low', 'medium', 'high', 'critical'] as TaskPriority[]).map((p) => {
-                const count = tasks.filter((t) => t.priority === p).length; const pct = Math.round((count / tasks.length) * 100)
-                return (<div key={p}><div className="flex items-center justify-between text-sm"><span className="capitalize text-gray-700">{PRIORITY_LABELS[p]}</span><span className="font-medium text-gray-900">{count}</span></div><div className="mt-1 h-2 rounded-full bg-gray-200"><div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div></div>)
-              })}
-            </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 lg:p-6">
+          <h3 className="mb-3 text-sm font-semibold text-gray-900 lg:mb-4">Tasks by Status</h3>
+          <div className="space-y-2 lg:space-y-3">
+            {(['pending', 'partially_done', 'done'] as TaskStatus[]).map((s) => {
+              const count = tasks.filter((t) => t.status === s).length; const pct = Math.round((count / tasks.length) * 100)
+              return (<div key={s}><div className="flex items-center justify-between text-sm"><span className="text-gray-700">{STATUS_LABELS[s]}</span><span className="font-medium text-gray-900">{count}</span></div><div className="mt-1 h-2 rounded-full bg-gray-200"><div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div></div>)
+            })}
           </div>
         </div>
       )}
@@ -161,12 +138,8 @@ export function TaskListPage() {
             <input type="text" placeholder="Search tasks..." value={search} onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-800" />
           </div>
-          <div className="flex gap-2">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as TaskStatus | '')}
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"><option value="">Status</option>{Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | '')}
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"><option value="">Priority</option>{Object.entries(PRIORITY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as TaskStatus | '')}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"><option value="">Status</option>{Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         </div>
       )}
 
@@ -179,8 +152,6 @@ export function TaskListPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Task</th>
                 {isAdmin && <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Owner</th>}
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Priority</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Due</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -189,8 +160,6 @@ export function TaskListPage() {
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{task.description || task.title}</td>
                   {isAdmin && <td className="px-6 py-4 text-sm text-gray-500">{(task as any).created_by_user?.name || 'Unknown'}</td>}
                   <td className="px-6 py-4"><Badge variant={task.status === 'done' ? 'success' : task.status === 'partially_done' ? 'info' : 'default'}>{STATUS_LABELS[task.status]}</Badge></td>
-                  <td className="px-6 py-4"><Badge variant={task.priority === 'critical' ? 'danger' : task.priority === 'high' ? 'warning' : task.priority === 'medium' ? 'info' : 'default'}>{PRIORITY_LABELS[task.priority]}</Badge></td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{task.due_date && <span className={isOverdue(task.due_date) ? 'text-red-500' : ''}>{formatDate(task.due_date)}</span>}</td>
                 </tr>
               ))}
             </tbody>
@@ -203,7 +172,6 @@ export function TaskListPage() {
                 <p className="text-sm font-medium text-gray-900 truncate">{task.description || task.title}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge variant={task.status === 'done' ? 'success' : task.status === 'partially_done' ? 'info' : 'default'}>{STATUS_LABELS[task.status]}</Badge>
-                  <Badge variant={task.priority === 'critical' ? 'danger' : task.priority === 'high' ? 'warning' : task.priority === 'medium' ? 'info' : 'default'}>{PRIORITY_LABELS[task.priority]}</Badge>
                   {isAdmin && <span className="text-xs text-gray-400">{(task as any).created_by_user?.name || 'Unknown'}</span>}
                 </div>
               </div>

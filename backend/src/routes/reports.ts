@@ -17,13 +17,11 @@ router.get('/pdf', async (_req: Request, res: Response) => {
   doc.setFontSize(10)
   doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28)
 
-  const headers = [['Title', 'Status', 'Priority', 'Owner', 'Due Date']]
+  const headers = [['Task', 'Status', 'Owner']]
   const rows = (tasks || []).map((t: any) => [
-    t.title,
+    t.description || t.title || '',
     t.status,
-    t.priority,
     t.created_by_user?.name || 'Unknown',
-    t.due_date || '-',
   ])
 
   const tableData = [...headers, ...rows]
@@ -51,9 +49,9 @@ router.get('/csv', async (_req: Request, res: Response) => {
     .order('created_at', { ascending: false })
 
   const csv = [
-    ['Title', 'Status', 'Priority', 'Owner', 'Due Date', 'Created At'].join(','),
+    ['Task', 'Status', 'Owner', 'Created At'].join(','),
     ...(tasks || []).map((t: any) =>
-      [t.title, t.status, t.priority, t.created_by_user?.name || '', t.due_date || '', t.created_at].join(',')
+      [t.description || t.title || '', t.status, t.created_by_user?.name || '', t.created_at].join(',')
     ),
   ].join('\n')
 

@@ -24,18 +24,14 @@ CREATE TABLE tasks (
   title TEXT NOT NULL,
   description TEXT DEFAULT '',
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'partially_done', 'done')),
-  priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),
   created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  due_date DATE,
   completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
-CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
 CREATE INDEX IF NOT EXISTS idx_tasks_created_by ON tasks(created_by);
-CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
 CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at);
 
 -- Task Assignees
