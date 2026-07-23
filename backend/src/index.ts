@@ -36,7 +36,7 @@ app.post('/api/users/set-password', async (req, res) => {
   if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' })
   try {
     const { sub } = await verifyToken(authHeader.replace('Bearer ', ''), { secretKey: env.clerkSecretKey })
-    await clerkClient.users.updateUser(sub, { password })
+    await clerkClient.users.updateUser(sub, { password, skipPasswordChecks: true })
     res.json({ success: true })
   } catch (err: any) {
     console.error('Set password error:', err?.message || err)
