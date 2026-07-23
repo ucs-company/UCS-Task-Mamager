@@ -138,7 +138,7 @@ export function TasksPage() {
         <h1 className="text-xl font-bold text-gray-900 dark:text-white lg:text-2xl">Tasks</h1>
       </div>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex flex-col gap-4 pb-4 lg:flex-row lg:gap-4 rounded-xl border-2 border-dashed border-gray-200 p-4 dark:border-gray-700">
+        <div className="flex flex-col gap-4 pb-4 lg:flex-row lg:gap-4 rounded-xl border-2 border-dashed border-gray-300 p-4 dark:border-gray-600">
           {columns.map((col) => (
             <DroppableColumn key={col.id} status={col.id} count={getColumnTasks(col.id).length}
               adding={addingTo === col.id} desc={newDesc} onDescChange={setNewDesc}
