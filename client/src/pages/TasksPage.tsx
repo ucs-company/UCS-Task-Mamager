@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
+  DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors,
   type DragStartEvent, type DragEndEvent, useDraggable, useDroppable,
 } from '@dnd-kit/core'
 import { useTasks } from '../hooks/useTasks'
@@ -57,9 +57,9 @@ function DroppableColumn({ status, children, count, adding, desc, onDescChange, 
       <div className={`flex flex-col gap-2 p-3 ${isOver ? 'bg-primary/5' : ''}`}>
         {children}
       </div>
-      <div className="mx-3 mb-3 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-4 dark:border-gray-700">
+      <div className="mx-3 mb-3 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
         {adding ? (
-          <div className="w-full space-y-2">
+          <div className="w-full p-2 space-y-2">
             <textarea value={desc} onChange={(e) => onDescChange(e.target.value)} placeholder="Describe the task..." rows={2} autoFocus
               className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
             <div className="flex items-center gap-2">
@@ -68,8 +68,8 @@ function DroppableColumn({ status, children, count, adding, desc, onDescChange, 
             </div>
           </div>
         ) : (
-          <button type="button" onClick={onStartAdd} className="flex items-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-primary">
-            <Plus className="h-4 w-4" /> Add Task
+          <button type="button" onClick={onStartAdd} className="flex w-full items-center justify-center gap-1 py-1.5 text-xs text-gray-400 transition-colors hover:text-primary">
+            <Plus className="h-3.5 w-3.5" /> Add Task
           </button>
         )}
       </div>
@@ -83,7 +83,10 @@ export function TasksPage() {
   const [addingTo, setAddingTo] = useState<TaskStatus | null>(null)
   const [newDesc, setNewDesc] = useState('')
   const [saving, setSaving] = useState(false)
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+  )
   const getColumnTasks = useCallback((status: TaskStatus) => tasks.filter((t) => t.status === status), [tasks])
 
   const handleDragStart = (event: DragStartEvent) => {
