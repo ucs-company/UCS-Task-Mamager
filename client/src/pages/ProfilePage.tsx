@@ -62,9 +62,7 @@ export function ProfilePage() {
   const [name, setName] = useState(profile?.name || '')
   const [saving, setSaving] = useState(false)
   const [pwOpen, setPwOpen] = useState(false)
-  const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
-  const [showCur, _setShowCur] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -89,14 +87,13 @@ export function ProfilePage() {
   }
 
   const handleChangePassword = async () => {
-    if (!currentPw || !newPw) return
+    if (!newPw) return
     setSaving(true)
     setError('')
     setSuccess('')
     try {
-      await (user as any).changePassword({ currentPassword: currentPw, newPassword: newPw })
+      await api.setPassword(newPw)
       setSuccess('Password updated!')
-      setCurrentPw('')
       setNewPw('')
       setPwOpen(false)
     } catch (err: any) {
@@ -159,18 +156,16 @@ export function ProfilePage() {
         </button>
         {pwOpen && (
           <div className="border-t border-gray-200 px-5 py-4 space-y-3 dark:border-gray-700">
-            <input type={showCur ? 'text' : 'password'} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)}
-              placeholder="Current password" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
             <div className="relative">
               <input type={showNew ? 'text' : 'password'} value={newPw} onChange={(e) => setNewPw(e.target.value)}
-                placeholder="New password" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
+                placeholder="New password (at least 6 characters)" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" />
               <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                 {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             {success && <p className="text-sm text-emerald-600">{success}</p>}
-            <Button size="sm" onClick={handleChangePassword} loading={saving} disabled={!currentPw || !newPw}>Update Password</Button>
+            <Button size="sm" onClick={handleChangePassword} loading={saving} disabled={!newPw}>Update Password</Button>
           </div>
         )}
       </div>
